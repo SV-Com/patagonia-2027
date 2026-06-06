@@ -163,66 +163,118 @@ const DEFAULT_STOPS = [
     nights: 1, distance: 840,
     lat: -36.6245, lng: -64.2900,
     note: 'Primera parada técnica. Tramo largo ~10h.',
-    activities: ['Cargar combustible', 'Cena y descanso']
+    activities: [
+      'Cargar combustible completo',
+      'Laguna Don Tomás (paseo urbano con el nene)',
+      '🏠 Apart: Hotel Calfucurá, Apart Nochero, Hotel Crisantemo'
+    ]
   },
   {
     id: 8, type: 'turistica',
     name: 'Las Grutas', province: 'Río Negro',
     nights: 1, distance: 650,
     lat: -40.8097, lng: -65.0847,
-    note: 'Primera costa atlántica. Acantilados y aguas cristalinas.',
-    activities: ['Playa Las Grutas (aguas cálidas para el Atlántico)', 'Acantilados y miradores costeros', 'Centro de buceo y snorkeling']
+    note: 'Primera costa atlántica. Acantilados y aguas cálidas para el Atlántico.',
+    activities: [
+      'Playa principal y acantilados (nene puede chapotear, agua cálida)',
+      'Balneario Tubería — toboganes naturales en la roca',
+      'Buceo y snorkeling en aguas transparentes',
+      '🏠 Cabañas: Brisas del Mar, Apart Acuarela, Complejo Turismar Las Grutas'
+    ]
   },
   {
     id: 2, type: 'turistica',
     name: 'Puerto Madryn', province: 'Chubut',
     nights: 2, distance: 250,
     lat: -42.7692, lng: -65.0385,
-    note: 'Costa patagónica. Fauna marina impresionante.',
-    activities: ['Playa El Doradillo (ballenas en temporada)', 'Punta Loma (lobos marinos)', 'Centro histórico y muelle']
+    note: 'Costa patagónica. Fauna marina impresionante. Base para Península Valdés.',
+    activities: [
+      'Playa El Doradillo — lobos marinos a metros de la orilla',
+      'Punta Loma (reserva natural, lobos marinos y pingüinos)',
+      'Ecocentro Puerto Madryn — perfecto para el nene',
+      'Excursión Península Valdés (guanaco, maras, zorros)',
+      '🏠 Apart/cabañas: La Huella Apart Hotel, Apart Bahía Nueva, Cabañas Patagonia'
+    ]
   },
   {
     id: 3, type: 'tecnica',
     name: 'Comodoro Rivadavia', province: 'Chubut',
     nights: 1, distance: 380,
     lat: -45.8653, lng: -67.4978,
-    note: 'Ciudad petrolera patagónica. Parada técnica.',
-    activities: ['Carga de combustible (importante)', 'Museo del Petróleo (opcional)']
+    note: 'Ciudad petrolera patagónica. Parada técnica importante antes del gran sur.',
+    activities: [
+      'Cargar combustible completo (último chance antes del sur)',
+      'Museo Nacional del Petróleo (gratuito, muy didáctico para niños)',
+      'Playa Rada Tilly (a 10 km, opción relajada)',
+      '🏠 Apart-hotel: Lucania Palazzo, Apart Comodoro, Hotel Azul'
+    ]
   },
   {
     id: 4, type: 'turistica',
     name: 'Río Grande', province: 'Tierra del Fuego',
     nights: 2, distance: 660,
     lat: -53.7876, lng: -67.7073,
-    note: 'Isla Grande de TDF. Cruce por Chile vía San Sebastián. Llevá DNI y cédula del auto.',
-    activities: ['Día 1: Llegada y descanso', 'Día 2: Excursión Ushuaia (ida/vuelta ~230 km, Paso Garibaldi)']
+    note: 'Isla Grande de TDF. Cruce por Chile vía San Sebastián (DNI + cédula auto). Base para Ushuaia.',
+    activities: [
+      'Día 1: Llegada, descanso y recorrida por el centro fueguino',
+      'Día 2: Excursión Ushuaia — Paso Garibaldi (ida/vuelta ~230 km)',
+      'Ushuaia: tren del Fin del Mundo, Parque Nacional Tierra del Fuego, Bahía Lapataia',
+      'Museo del Presidio de Ushuaia (impresionante para toda la familia)',
+      '🏠 Alojamiento RG: Posada de los Sauces, Hotel Atlántida, Apart Antártida'
+    ]
   },
   {
     id: 5, type: 'turistica',
     name: 'El Calafate', province: 'Santa Cruz',
     nights: 2, distance: 660,
     lat: -50.3396, lng: -72.2752,
-    note: 'Capital de los glaciares. Reservar Perito Moreno con anticipación.',
-    activities: ['Glaciar Perito Moreno (reservar entrada)', 'Lago Argentino', 'Mirador de los Cóndores']
+    note: 'Capital de los glaciares. Reservar entrada al Glaciar Perito Moreno con anticipación.',
+    activities: [
+      'Glaciar Perito Moreno — pasarelas y trekking en el hielo (reservar online)',
+      'Lago Argentino — navegación entre témpanos (imperdible)',
+      'Centro de interpretación glaciológica (gratis, muy bueno)',
+      'Mirador de los Cóndores al atardecer',
+      '🏠 Cabañas/apart: Posada Los Álamos, Cabañas del Sol Calafate, Apart América del Sur'
+    ]
   },
   {
     id: 6, type: 'tecnica',
     name: 'Perito Moreno', province: 'Santa Cruz',
     nights: 1, distance: 420,
     lat: -46.5394, lng: -70.9244,
-    note: 'Localidad sobre Ruta 40 Norte. No confundir con el glaciar.',
-    activities: ['Cueva de las Manos (120 km al sur, opcional)', 'Descanso pre-regreso']
+    note: 'Localidad en Ruta 40 Norte. No confundir con el glaciar. Última parada antes del regreso.',
+    activities: [
+      'Cueva de las Manos (Patrimonio UNESCO — 80 km al sur, muy recomendable)',
+      'Lago Buenos Aires / General Carrera (azul turquesa impresionante)',
+      'Cargar nafta completo',
+      '🏠 Alojamiento: Apart Austral, Hostería Americano, Cabañas del Lago Buenos Aires'
+    ]
   },
   {
     id: 7, type: 'destino',
     name: 'Regreso a Chajarí', province: 'Entre Ríos',
-    nights: 0, distance: 2100,
+    nights: 0, distance: 2420,
     lat: -30.7500, lng: -57.9500,
-    note: 'Ruta 40 Norte → San Martín de los Andes → Neuquén → Ruta 22 → La Pampa → Chajarí. 3 jornadas completas a ~700 km/día.',
+    note: 'Ruta 40 Norte por estepa → Esquel → Zapala → Neuquén → Ruta 22 → La Pampa → Chajarí. 4 jornadas de ~600 km (más cómodo para el nene).',
     activities: [
-      'Jornada 1 (~700 km): Perito Moreno → Río Mayo → Tecka → San Martín de los Andes (Ruta 40 Norte, estepa)',
-      'Jornada 2 (~700 km): San Martín → Neuquén (Ruta 234) → General Roca → avance por Ruta 22',
-      'Jornada 3 (~700 km): La Pampa → Santa Rosa → Ruta 188 → Concordia → Chajarí'
+      '── TRAMO 1 (~510 km): Perito Moreno → Esquel ──',
+      'Ruta 40 Norte: Río Mayo → Tecka → Esquel. Estepa y serranías.',
+      'Esquel: La Trochita (tren de vapor histórico, al nene le encanta)',
+      'Parque Nacional Los Alerces — lagos color esmeralda, kayak',
+      '🏠 Esquel: Hostería Angelina, Cabañas El Refugio, Apart Los Maitenes',
+      '── TRAMO 2 (~540 km): Esquel → Neuquén ──',
+      'Ruta 40 Norte: Tecka → Zapala → Neuquén. Paisaje abierto de la cordillera.',
+      'Opcional +400 km: desvío por El Bolsón y Bariloche (agrega 1 día)',
+      'Neuquén: bodegas del Alto Valle, Parque Natural Municipal',
+      '🏠 Neuquén: Apart Del Comahue, Cabañas La Ribera, Hotel Crystal',
+      '── TRAMO 3 (~530 km): Neuquén → Santa Rosa ──',
+      'Ruta 22 este → General Roca → Río Colorado → Ruta 35 norte → Santa Rosa.',
+      'Santa Rosa: Laguna Don Tomás (ya la conocen de ida)',
+      'Opcional desvío: Parque Nac. Lihué Calel (230 km, cuevas y cóndores)',
+      '🏠 Santa Rosa: Hotel Calfucurá, Apart San Martín, Cabañas Lihué',
+      '── TRAMO 4 (~840 km): Santa Rosa → Chajarí ──',
+      'Ruta 188 → Junín → Ruta 7 → Zárate → Ruta 14 → Concordia → Chajarí.',
+      '¡Llegada a casa!'
     ]
   }
 ];
