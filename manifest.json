@@ -1,0 +1,17 @@
+{
+  "short_name": "Ruta2027",
+  "name": "Patagonia 2027: Al Fin del Mundo",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2439/2439712.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#111827",
+  "theme_color": "#1e3a8a",
+  "display": "standalone",
+  "orientation": "portrait"
+}
