@@ -385,10 +385,17 @@ function renderItinerary() {
     if (idx > 0) {
       const horas  = Math.round(stop.distance / 80);
       const litros = (stop.distance * TRIP.consumption / 100).toFixed(0);
-      const alertL = stop.distance > 700 ? '<span class="ml-1 text-yellow-400">⚡ tramo largo</span>' : '';
+      const alertL = stop.distance > 700 ? '<span class="text-yellow-400">⚡ tramo largo</span>' : '';
       html += `<div class="flex ml-6 my-0.5">
         <div class="dashed-line ml-3 pl-4 py-2 flex-1">
-          <div class="text-xs text-gray-500">🚗 ${stop.distance} km &nbsp;·&nbsp; ~${horas}h &nbsp;·&nbsp; ${litros} L${alertL}</div>
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span class="text-gray-500 text-xs">🚗</span>
+            <input type="number" value="${stop.distance}" min="0" step="10"
+              class="w-16 bg-gray-800 border border-gray-700 rounded-md px-1.5 py-0.5 text-xs text-blue-300 font-bold text-center focus:border-blue-500 focus:outline-none focus:bg-gray-700 transition-colors"
+              onchange="updateDistance(${stop.id}, this.value)"
+              onclick="this.select()">
+            <span class="text-xs text-gray-500">km &nbsp;·&nbsp; ~${horas}h &nbsp;·&nbsp; ${litros}L &nbsp;${alertL}</span>
+          </div>
           <div class="flex flex-wrap gap-3 mt-1">
             ${!isDest && prev ? `<a href="${mapsLink(prev, stop)}" target="_blank"
               class="press inline-flex items-center gap-1 text-xs text-blue-500 font-semibold">
@@ -755,6 +762,18 @@ function changeNights(id, delta) {
   stop.nights = Math.max(0, stop.nights + delta);
   saveState();
   render();
+}
+
+function updateDistance(stopId, val) {
+  const stop = state.stops.find(s => s.id === stopId);
+  if (!stop) return;
+  const newDist = Math.max(0, parseInt(val) || 0);
+  if (newDist === stop.distance) return;
+  stop.distance = newDist;
+  saveState();
+  renderHeader();
+  renderItinerary();
+  if (currentTab === 'combustible') renderCombustible();
 }
 
 function addExpense() {
