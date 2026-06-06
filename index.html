@@ -247,7 +247,8 @@ const DEFAULT_STOPS = [
       'Cueva de las Manos (Patrimonio UNESCO — 80 km al sur, muy recomendable)',
       'Lago Buenos Aires / General Carrera (azul turquesa impresionante)',
       'Cargar nafta completo',
-      '🏠 Alojamiento: Apart Austral, Hostería Americano, Cabañas del Lago Buenos Aires'
+      '🏠 Alojamiento: Apart Austral, Hostería Americano, Cabañas del Lago Buenos Aires',
+      '⚠️ 73 km de ripio en el tramo desde El Calafate — máx 60-80 km/h, cuidar neumáticos del Versa'
     ]
   },
   {
@@ -459,6 +460,7 @@ function renderItinerary() {
       const horas  = Math.round(stop.distance / 80);
       const litros = (stop.distance * TRIP.consumption / 100).toFixed(0);
       const alertL = stop.distance > 700 ? '<span class="text-yellow-400">⚡ tramo largo</span>' : '';
+      const ripioAlert = stop.id === 6 ? '<span class="ml-1 px-1.5 py-0.5 rounded bg-orange-900 border border-orange-600 text-orange-300 text-xs font-semibold">🪨 73 km ripio</span>' : '';
       html += `<div class="flex ml-6 my-0.5">
         <div class="dashed-line ml-3 pl-4 py-2 flex-1">
           <div class="flex items-center gap-1.5 flex-wrap">
@@ -468,6 +470,7 @@ function renderItinerary() {
               onchange="updateDistance(${stop.id}, this.value)"
               onclick="this.select()">
             <span class="text-xs text-gray-500">km &nbsp;·&nbsp; ~${horas}h &nbsp;·&nbsp; ${litros}L &nbsp;${alertL}</span>
+            ${ripioAlert}
           </div>
           <div class="flex flex-wrap gap-3 mt-1">
             ${!isDest && prev ? `<a href="${mapsLink(prev, stop)}" target="_blank"
