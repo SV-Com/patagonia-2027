@@ -279,10 +279,26 @@ const DEFAULT_STOPS = [
   }
 ];
 
+// Actividades del tramo 4 (intercambiables)
+const TRAMO4_UNIFIED = [
+  '── TRAMO 4 (~840 km): Santa Rosa → Chajarí ──',
+  'Ruta 188 → Junín → Ruta 7 → Zárate → Ruta 14 → Concordia → Chajarí.',
+  '¡Llegada a casa!'
+];
+const TRAMO4_SPLIT = [
+  '── TRAMO 4a (~500 km): Santa Rosa → Rosario ──',
+  'Ruta 7 este → Rufino → Venado Tuerto → Rosario. Llanura pampeana.',
+  'Rosario: Monumento a la Bandera, Costanera Norte, Parque de la Independencia',
+  '🏠 Rosario: Apart Esplendor Rosario, Dazzler Tower Rosario, NH Collection',
+  '── TRAMO 4b (~340 km): Rosario → Chajarí ──',
+  'Ruta 12 norte → Gualeguaychú → Concordia → Chajarí.',
+  '¡Llegada a casa!'
+];
+
 // ═══════════════════════════════════════════════════
 // ESTADO (persiste en localStorage)
 // ═══════════════════════════════════════════════════
-let state = { stops: [], expenses: [], fuelPrice: 1.10 };
+let state = { stops: [], expenses: [], fuelPrice: 1.10, splitLeg4: false };
 let currentTab = 'itinerary';
 
 function loadState() {
@@ -293,6 +309,7 @@ function loadState() {
       state.stops     = s.stops     || deepClone(DEFAULT_STOPS);
       state.expenses  = s.expenses  || [];
       state.fuelPrice = s.fuelPrice || 1.10;
+      state.splitLeg4 = s.splitLeg4 || false;
     } else {
       state.stops = deepClone(DEFAULT_STOPS);
     }
@@ -511,6 +528,17 @@ function renderItinerary() {
           <button onclick="changeNights(${stop.id}, 1)"
             class="night-btn w-9 h-9 rounded-full bg-blue-700 flex items-center justify-center text-xl font-bold press">+</button>
         </div>
+      </div>` : ''}
+      ${isDest ? `<div class="border-t border-gray-700 px-4 py-3 bg-gray-900 bg-opacity-40">
+        <button onclick="toggleSplitLeg4()"
+          class="press w-full font-semibold py-2.5 rounded-xl text-sm transition-colors ${state.splitLeg4
+            ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+            : 'bg-teal-900 border border-teal-700 text-teal-200 hover:bg-teal-800'}">
+          ${state.splitLeg4
+            ? '✕ Unir tramo 4 en 1 jornada (~840 km)'
+            : '✂️ Partir tramo 4 en 2 jornadas (dormir en Rosario)'}
+        </button>
+        ${state.splitLeg4 ? '<p class="text-xs text-yellow-400 text-center mt-2">+1 día al total · compensar reduciendo una noche en la ida</p>' : ''}
       </div>` : ''}
     </div>`;
   });
@@ -867,11 +895,30 @@ function updateFuelPrice(val) {
   renderCombustible();
 }
 
+function toggleSplitLeg4() {
+  state.splitLeg4 = !state.splitLeg4;
+  const ret = state.stops.find(s => s.type === 'destino');
+  if (!ret) return;
+
+  // Quitar actividades del tramo 4 (de cualquier versión)
+  const TRAMO4_MARKERS = ['TRAMO 4', '¡Llegada a casa!', 'Ruta 188 →', 'Ruta 7 este →',
+                           'Ruta 12 norte →', 'Rosario:', '🏠 Rosario:'];
+  ret.activities = ret.activities.filter(a => !TRAMO4_MARKERS.some(m => a.includes(m)));
+
+  // Agregar la versión correcta y actualizar distancia
+  ret.activities.push(...(state.splitLeg4 ? TRAMO4_SPLIT : TRAMO4_UNIFIED));
+  ret.distance = state.splitLeg4 ? 2920 : 2420;
+
+  saveState();
+  render();
+}
+
 function resetApp() {
   if (!confirm('¿Restaurar todo a los valores originales? Se perderán los gastos registrados.')) return;
   state.stops     = deepClone(DEFAULT_STOPS);
   state.expenses  = [];
   state.fuelPrice = 1.10;
+  state.splitLeg4 = false;
   saveState();
   render();
 }
