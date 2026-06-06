@@ -26,6 +26,10 @@
     .night-btn:active { transform: scale(0.88); }
     .card { background: #1f2937; border-radius: 1rem; }
     .badge { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.05em; padding: 2px 8px; border-radius: 999px; }
+    .sheet { transform: translateY(100%); transition: transform 0.28s cubic-bezier(0.32,0.72,0,1); }
+    .sheet.open { transform: translateY(0); }
+    .overlay { opacity: 0; transition: opacity 0.28s; pointer-events: none; }
+    .overlay.open { opacity: 1; pointer-events: auto; }
   </style>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen">
@@ -71,6 +75,62 @@
     </button>
   </div>
 </nav>
+
+<!-- ─── MODAL: NUEVA PARADA ────────────────────────── -->
+<div id="modal-overlay" class="overlay fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-end">
+  <div id="modal-sheet" class="sheet bg-gray-800 w-full max-w-lg mx-auto rounded-t-2xl p-5 pb-10 shadow-2xl">
+    <div class="w-10 h-1 bg-gray-600 rounded-full mx-auto mb-4"></div>
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="font-bold text-lg">➕ Nueva Parada</h3>
+      <button onclick="closeStopModal()" class="press w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-gray-300 text-xl leading-none">×</button>
+    </div>
+    <div class="space-y-3">
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="text-xs text-gray-400 mb-1 block">Ciudad *</label>
+          <input type="text" id="ns-name" placeholder="Ej: Bahía Blanca"
+            class="w-full bg-gray-700 rounded-lg px-3 py-2.5 text-sm border border-gray-600 focus:border-blue-500 focus:outline-none">
+        </div>
+        <div>
+          <label class="text-xs text-gray-400 mb-1 block">Provincia</label>
+          <input type="text" id="ns-province" placeholder="Ej: Buenos Aires"
+            class="w-full bg-gray-700 rounded-lg px-3 py-2.5 text-sm border border-gray-600 focus:border-blue-500 focus:outline-none">
+        </div>
+      </div>
+      <div class="grid grid-cols-3 gap-2">
+        <div>
+          <label class="text-xs text-gray-400 mb-1 block">Tipo</label>
+          <select id="ns-type" class="w-full bg-gray-700 rounded-lg px-2 py-2.5 text-sm border border-gray-600 focus:border-blue-500 focus:outline-none">
+            <option value="turistica">Turística</option>
+            <option value="tecnica">Técnica</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs text-gray-400 mb-1 block">Noches</label>
+          <input type="number" id="ns-nights" value="1" min="0" max="14"
+            class="w-full bg-gray-700 rounded-lg px-3 py-2.5 text-sm border border-gray-600 focus:border-blue-500 focus:outline-none">
+        </div>
+        <div>
+          <label class="text-xs text-gray-400 mb-1 block">Km desde ant.</label>
+          <input type="number" id="ns-km" placeholder="0" min="0"
+            class="w-full bg-gray-700 rounded-lg px-3 py-2.5 text-sm border border-gray-600 focus:border-blue-500 focus:outline-none">
+        </div>
+      </div>
+      <div>
+        <label class="text-xs text-gray-400 mb-1 block">Nota (opcional)</label>
+        <input type="text" id="ns-note" placeholder="Descripción o recordatorio"
+          class="w-full bg-gray-700 rounded-lg px-3 py-2.5 text-sm border border-gray-600 focus:border-blue-500 focus:outline-none">
+      </div>
+      <div class="pt-1 text-xs text-gray-500">
+        💡 Verificá también los km de la parada siguiente al agregar una nueva.
+      </div>
+      <button onclick="confirmAddStop()"
+        class="press w-full bg-blue-600 hover:bg-blue-500 font-bold py-3 rounded-xl transition-colors">
+        Agregar Parada al Itinerario
+      </button>
+    </div>
+  </div>
+</div>
 
 <script>
 // ═══════════════════════════════════════════════════
@@ -236,7 +296,13 @@ function budgetLeft()  { return TRIP.budget - totalSpent(); }
 // LINKS DE GOOGLE MAPS (Android Auto)
 // ═══════════════════════════════════════════════════
 function mapsLink(from, to) {
-  return `https://www.google.com/maps/dir/?api=1&origin=${from.lat},${from.lng}&destination=${to.lat},${to.lng}&travelmode=driving`;
+  const origin = (from.lat && from.lng)
+    ? `${from.lat},${from.lng}`
+    : encodeURIComponent(`${from.name}${from.province ? ', ' + from.province : ''}, Argentina`);
+  const dest = (to.lat && to.lng)
+    ? `${to.lat},${to.lng}`
+    : encodeURIComponent(`${to.name}${to.province ? ', ' + to.province : ''}, Argentina`);
+  return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${dest}&travelmode=driving`;
 }
 
 // ═══════════════════════════════════════════════════
@@ -307,17 +373,22 @@ function renderItinerary() {
     const isDest = stop.type === 'destino';
     const canEdit = !isOrig && !isDest;
 
-    // Conector entre paradas
+    // Conector entre paradas + botón insertar
     if (idx > 0) {
-      const horas = Math.round(stop.distance / 80);
+      const horas  = Math.round(stop.distance / 80);
       const litros = (stop.distance * TRIP.consumption / 100).toFixed(0);
-      const alert  = stop.distance > 700 ? '<span class="ml-1 text-yellow-400">⚡ tramo largo</span>' : '';
+      const alertL = stop.distance > 700 ? '<span class="ml-1 text-yellow-400">⚡ tramo largo</span>' : '';
       html += `<div class="flex ml-6 my-0.5">
         <div class="dashed-line ml-3 pl-4 py-2 flex-1">
-          <div class="text-xs text-gray-500">🚗 ${stop.distance} km &nbsp;·&nbsp; ~${horas}h &nbsp;·&nbsp; ${litros} L${alert}</div>
-          ${!isDest && prev ? `<a href="${mapsLink(prev, stop)}" target="_blank"
-            class="press inline-flex items-center gap-1 text-xs text-blue-500 font-semibold mt-1">
-            📍 Navegar en Maps →</a>` : ''}
+          <div class="text-xs text-gray-500">🚗 ${stop.distance} km &nbsp;·&nbsp; ~${horas}h &nbsp;·&nbsp; ${litros} L${alertL}</div>
+          <div class="flex flex-wrap gap-3 mt-1">
+            ${!isDest && prev ? `<a href="${mapsLink(prev, stop)}" target="_blank"
+              class="press inline-flex items-center gap-1 text-xs text-blue-500 font-semibold">
+              📍 Navegar →</a>` : ''}
+            <button onclick="openStopModal(${idx - 1})"
+              class="press inline-flex items-center gap-1 text-xs text-emerald-500 font-semibold">
+              ＋ Insertar parada aquí</button>
+          </div>
         </div>
       </div>`;
     }
@@ -330,6 +401,8 @@ function renderItinerary() {
             <div class="flex flex-wrap items-center gap-1.5 mb-1">
               <span class="badge ${typeColor[stop.type]}">${typeLabel[stop.type]}</span>
               <span class="text-xs text-gray-500">${stop.province}</span>
+              ${stop.custom ? `<button onclick="deleteStop(${stop.id})"
+                class="press badge bg-red-950 text-red-400 border border-red-800">✕ eliminar</button>` : ''}
             </div>
             <h2 class="text-xl font-black truncate">${stop.name}</h2>
           </div>
@@ -338,10 +411,24 @@ function renderItinerary() {
             ${stop.nights > 0 ? `<div class="text-xs text-gray-500">sale ${fmtShort(stop.departure)}</div>` : ''}
           </div>
         </div>
-        <p class="text-xs text-gray-400 mt-2 leading-relaxed">${stop.note}</p>
-        ${stop.activities.length ? `<ul class="mt-2 space-y-0.5">
-          ${stop.activities.map(a => `<li class="text-xs text-gray-500">· ${a}</li>`).join('')}
-        </ul>` : ''}
+        ${stop.note ? `<p class="text-xs text-gray-400 mt-2 leading-relaxed">${stop.note}</p>` : ''}
+
+        <!-- Actividades editables -->
+        <div class="mt-2 space-y-0.5">
+          ${(stop.activities || []).map((a, ai) => `
+            <div class="flex items-center gap-1">
+              <span class="text-xs text-gray-500 flex-1">· ${a}</span>
+              <button onclick="removeActivity(${stop.id}, ${ai})"
+                class="press shrink-0 text-red-500 text-base w-5 h-5 flex items-center justify-center opacity-50 hover:opacity-100">×</button>
+            </div>`).join('')}
+        </div>
+        <div class="flex gap-1.5 mt-2">
+          <input type="text" id="act-${stop.id}" placeholder="＋ agregar actividad o visita"
+            class="flex-1 bg-gray-700 rounded-lg px-2.5 py-1.5 text-xs border border-gray-600 focus:border-blue-500 focus:outline-none"
+            onkeydown="if(event.key==='Enter')addActivity(${stop.id})">
+          <button onclick="addActivity(${stop.id})"
+            class="press bg-gray-700 hover:bg-gray-600 text-blue-400 font-bold px-3 rounded-lg text-sm transition-colors">＋</button>
+        </div>
       </div>
 
       ${canEdit ? `<div class="border-t border-gray-700 px-4 py-2.5 flex items-center justify-between bg-gray-900 bg-opacity-30">
@@ -747,6 +834,89 @@ function render() {
 }
 
 // ═══════════════════════════════════════════════════
+// MODAL: NUEVA PARADA
+// ═══════════════════════════════════════════════════
+let _insertAfter = -1;
+
+function openStopModal(afterIdx) {
+  _insertAfter = afterIdx;
+  ['ns-name','ns-province','ns-note','ns-km'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('ns-nights').value = '1';
+  document.getElementById('ns-type').value = 'turistica';
+  const ov = document.getElementById('modal-overlay');
+  const sh = document.getElementById('modal-sheet');
+  ov.classList.add('open');
+  sh.classList.add('open');
+  setTimeout(() => document.getElementById('ns-name').focus(), 300);
+}
+
+function closeStopModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.getElementById('modal-sheet').classList.remove('open');
+}
+
+function confirmAddStop() {
+  const name = document.getElementById('ns-name').value.trim();
+  if (!name) { alert('Ingresá el nombre de la ciudad.'); return; }
+
+  const newStop = {
+    id: Date.now(),
+    type:     document.getElementById('ns-type').value,
+    name,
+    province: document.getElementById('ns-province').value.trim(),
+    nights:   parseInt(document.getElementById('ns-nights').value) || 0,
+    distance: parseInt(document.getElementById('ns-km').value) || 0,
+    lat: 0, lng: 0,
+    note:     document.getElementById('ns-note').value.trim(),
+    activities: [],
+    custom: true,
+  };
+
+  state.stops.splice(_insertAfter + 1, 0, newStop);
+  saveState();
+  closeStopModal();
+  render();
+}
+
+// ═══════════════════════════════════════════════════
+// ELIMINAR PARADA CUSTOM
+// ═══════════════════════════════════════════════════
+function deleteStop(id) {
+  if (!confirm('¿Eliminar esta parada del itinerario?')) return;
+  state.stops = state.stops.filter(s => s.id !== id);
+  saveState();
+  render();
+}
+
+// ═══════════════════════════════════════════════════
+// GESTIÓN DE ACTIVIDADES
+// ═══════════════════════════════════════════════════
+function addActivity(stopId) {
+  const input = document.getElementById(`act-${stopId}`);
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return;
+  const stop = state.stops.find(s => s.id === stopId);
+  if (!stop) return;
+  if (!stop.activities) stop.activities = [];
+  stop.activities.push(text);
+  input.value = '';
+  saveState();
+  renderItinerary();
+  // Restaurar foco después del re-render
+  const restored = document.getElementById(`act-${stopId}`);
+  if (restored) restored.focus();
+}
+
+function removeActivity(stopId, actIdx) {
+  const stop = state.stops.find(s => s.id === stopId);
+  if (!stop) return;
+  stop.activities.splice(actIdx, 1);
+  saveState();
+  renderItinerary();
+}
+
+// ═══════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
@@ -754,6 +924,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+
+  document.getElementById('modal-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('modal-overlay')) closeStopModal();
   });
 
   if ('serviceWorker' in navigator) {
