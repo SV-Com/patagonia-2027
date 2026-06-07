@@ -1,4 +1,4 @@
-const CACHE_NAME = 'v1_patagonia_cache';
+const CACHE_NAME = 'v2_patagonia_cache';
 const ASSETS = [
   './',
   './index.html',

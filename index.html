@@ -138,8 +138,8 @@
 // ═══════════════════════════════════════════════════
 const TRIP = {
   startDate:    new Date('2027-01-02T00:00:00'),
-  maxDays:      21,
-  deadline:     new Date('2027-01-23T00:00:00'),
+  maxDays:      35,
+  deadline:     new Date('2027-02-06T00:00:00'),
   budget:       4200,   // USD total
   consumption:  6,      // litros / 100 km
   tankRange:    700,    // km por tanque
@@ -422,18 +422,24 @@ function daysBetween(a, b) {
 // ═══════════════════════════════════════════════════
 function calcDates() {
   const stops = state.stops;
-
-  // Origen: salida el día de inicio
   stops[0].arrival   = new Date(TRIP.startDate);
   stops[0].departure = new Date(TRIP.startDate);
 
-  // Cada parada: llega al día siguiente de la salida anterior
   for (let i = 1; i < stops.length; i++) {
-    stops[i].arrival   = addDays(stops[i - 1].departure, 1);
+    // Find the last stop where someone actually slept (or the origin)
+    let srcIdx = i - 1;
+    while (srcIdx > 0 && stops[srcIdx].nights === 0 && stops[srcIdx].type !== 'origen') {
+      srcIdx--;
+    }
+    // Sum km from that stop to the current one (including intermediate 0-night waypoints)
+    let cumKm = 0;
+    for (let k = srcIdx + 1; k <= i; k++) cumKm += stops[k].distance;
+    // Round-based days: < 350km = same day (0), 350–1050km = 1 day, etc.
+    const travelDays = Math.round(cumKm / TRIP.tankRange);
+    stops[i].arrival   = addDays(stops[srcIdx].departure, travelDays);
     stops[i].departure = addDays(stops[i].arrival, stops[i].nights);
   }
 
-  // El destino es la última parada — su arrival ES la fecha de regreso
   const lastStop   = stops[stops.length - 1];
   const returnHome = new Date(lastStop.arrival);
   const totalDays  = daysBetween(TRIP.startDate, returnHome);
@@ -510,7 +516,7 @@ function renderItinerary() {
     html += `<div class="mx-3 mt-3 bg-red-950 border border-red-700 rounded-xl p-3 flex gap-3">
       <span class="text-2xl">⚠️</span>
       <div><div class="font-bold text-red-300">Viaje excede el límite en ${excess} día${excess > 1 ? 's' : ''}</div>
-      <div class="text-xs text-red-400 mt-0.5">Reducí noches en alguna parada para llegar antes del 23 de enero.</div></div>
+      <div class="text-xs text-red-400 mt-0.5">Reducí noches en alguna parada para llegar antes del 6 de febrero.</div></div>
     </div>`;
   }
 
@@ -622,7 +628,7 @@ function renderItinerary() {
     <div class="text-xs text-gray-500 mb-0.5">Regreso estimado a Chajarí</div>
     <div class="text-lg font-bold ${onTime ? 'text-green-400' : 'text-red-400'}">${fmtDate(returnHome)}</div>
     <div class="text-xs ${onTime ? 'text-green-600' : 'text-red-600'} mt-0.5">
-      ${onTime ? '✓ Antes del límite (23 enero)' : '✗ Supera el 23 de enero'}
+      ${onTime ? '✓ Antes del límite (6 feb)' : '✗ Supera el 6 de febrero'}
     </div>
   </div>`;
 
@@ -856,7 +862,7 @@ function renderInfo() {
     <h3 class="font-bold text-lg mb-3">📋 Datos del Viaje</h3>
     <div class="space-y-2 text-sm">
       <div class="flex justify-between"><span class="text-gray-400">Salida</span><span class="font-medium">2 de enero de 2027</span></div>
-      <div class="flex justify-between"><span class="text-gray-400">Límite de regreso</span><span class="font-medium text-yellow-400">23 de enero de 2027</span></div>
+      <div class="flex justify-between"><span class="text-gray-400">Límite de regreso</span><span class="font-medium text-yellow-400">6 de febrero de 2027</span></div>
       <div class="flex justify-between"><span class="text-gray-400">Días disponibles</span><span>21 días</span></div>
       <div class="flex justify-between"><span class="text-gray-400">Presupuesto diario</span><span>$200 USD (hotel + comida)</span></div>
       <div class="flex justify-between"><span class="text-gray-400">Presupuesto total</span><span class="font-medium text-green-400">$4.200 USD</span></div>
