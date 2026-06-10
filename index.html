@@ -30,6 +30,7 @@
     .sheet.open { transform: translateY(0); }
     .overlay { opacity: 0; transition: opacity 0.28s; pointer-events: none; }
     .overlay.open { opacity: 1; pointer-events: auto; }
+    .check-item { transition: background 0.15s; }
   </style>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen">
@@ -52,26 +53,30 @@
 
 <!-- ─── MAIN CONTENT ───────────────────────────────── -->
 <main class="max-w-lg mx-auto pt-[88px] pb-[72px]">
-  <div id="tab-itinerary" class="tab-pane fade"></div>
-  <div id="tab-finanzas"  class="tab-pane fade hidden"></div>
+  <div id="tab-itinerary"   class="tab-pane fade"></div>
+  <div id="tab-finanzas"    class="tab-pane fade hidden"></div>
   <div id="tab-combustible" class="tab-pane fade hidden"></div>
-  <div id="tab-info"     class="tab-pane fade hidden"></div>
+  <div id="tab-lista"       class="tab-pane fade hidden"></div>
+  <div id="tab-info"        class="tab-pane fade hidden"></div>
 </main>
 
 <!-- ─── BOTTOM TAB BAR ────────────────────────────── -->
 <nav class="fixed bottom-0 left-0 right-0 z-50 bg-gray-800 border-t border-gray-700" style="padding-bottom: env(safe-area-inset-bottom, 0px)">
   <div class="max-w-lg mx-auto flex">
-    <button class="tab-btn tab-active flex-1 flex flex-col items-center py-2.5 text-xs font-medium" data-tab="itinerary">
-      <span class="text-xl leading-none mb-1">🗺️</span><span>Ruta</span>
+    <button class="tab-btn tab-active flex-1 flex flex-col items-center py-2 text-xs font-medium" data-tab="itinerary">
+      <span class="text-xl leading-none mb-0.5">🗺️</span><span>Ruta</span>
     </button>
-    <button class="tab-btn flex-1 flex flex-col items-center py-2.5 text-xs font-medium text-gray-400" data-tab="finanzas">
-      <span class="text-xl leading-none mb-1">💰</span><span>Finanzas</span>
+    <button class="tab-btn flex-1 flex flex-col items-center py-2 text-xs font-medium text-gray-400" data-tab="finanzas">
+      <span class="text-xl leading-none mb-0.5">💰</span><span>Finanzas</span>
     </button>
-    <button class="tab-btn flex-1 flex flex-col items-center py-2.5 text-xs font-medium text-gray-400" data-tab="combustible">
-      <span class="text-xl leading-none mb-1">⛽</span><span>Nafta</span>
+    <button class="tab-btn flex-1 flex flex-col items-center py-2 text-xs font-medium text-gray-400" data-tab="combustible">
+      <span class="text-xl leading-none mb-0.5">⛽</span><span>Nafta</span>
     </button>
-    <button class="tab-btn flex-1 flex flex-col items-center py-2.5 text-xs font-medium text-gray-400" data-tab="info">
-      <span class="text-xl leading-none mb-1">ℹ️</span><span>Info</span>
+    <button class="tab-btn flex-1 flex flex-col items-center py-2 text-xs font-medium text-gray-400" data-tab="lista">
+      <span class="text-xl leading-none mb-0.5">✅</span><span>Lista</span>
+    </button>
+    <button class="tab-btn flex-1 flex flex-col items-center py-2 text-xs font-medium text-gray-400" data-tab="info">
+      <span class="text-xl leading-none mb-0.5">ℹ️</span><span>Info</span>
     </button>
   </div>
 </nav>
@@ -137,13 +142,70 @@
 // CONSTANTES DEL VIAJE
 // ═══════════════════════════════════════════════════
 const TRIP = {
-  startDate:    new Date('2027-01-02T00:00:00'),
-  maxDays:      21,
-  deadline:     new Date('2027-01-23T00:00:00'),
-  budget:       4200,   // USD total
-  consumption:  6,      // litros / 100 km
-  tankRange:    700,    // km por tanque
+  startDate:   new Date('2027-01-02T00:00:00'),
+  maxDays:     21,
+  deadline:    new Date('2027-01-23T00:00:00'),
+  budget:      4200,
+  consumption: 6,
+  tankRange:   700,
 };
+
+// ═══════════════════════════════════════════════════
+// CHECKLIST (categorías y ítems fijos)
+// ═══════════════════════════════════════════════════
+const CHECKLIST_DEF = [
+  {
+    cat: '📋 Documentación',
+    items: [
+      { key: 'doc-dni',      label: 'DNI vigente de todos los tripulantes' },
+      { key: 'doc-cedula',   label: 'Cédula verde o azul del vehículo' },
+      { key: 'doc-seguro',   label: 'Seguro del auto con cobertura en Chile' },
+      { key: 'doc-carnet',   label: 'Carnet de conducir vigente' },
+      { key: 'doc-moreno',   label: 'Reserva Glaciar Perito Moreno (online)' },
+      { key: 'doc-efectivo', label: 'Efectivo ARS y USD (tarjetas no siempre aceptadas en ruta)' },
+    ]
+  },
+  {
+    cat: '🚗 Vehículo',
+    items: [
+      { key: 'veh-aceite',     label: 'Aceite del motor (nivel y estado)' },
+      { key: 'veh-neumaticos', label: 'Neumáticos + repuesto en condiciones' },
+      { key: 'veh-frenos',     label: 'Frenos revisados' },
+      { key: 'veh-agua',       label: 'Agua del radiador y limpiaparabrisas' },
+      { key: 'veh-bateria',    label: 'Batería (carga y bornes)' },
+      { key: 'veh-triangulos', label: '2 triángulos de emergencia (obligatorio)' },
+      { key: 'veh-chaleco',    label: 'Chaleco reflectante (obligatorio)' },
+      { key: 'veh-matafuego',  label: 'Matafuego vigente (obligatorio)' },
+      { key: 'veh-botiquin',   label: 'Botiquín de primeros auxilios' },
+      { key: 'veh-linterna',   label: 'Linterna y pilas de repuesto' },
+      { key: 'veh-cadenas',    label: 'Cadenas para nieve (TDF y Calafate en enero)' },
+    ]
+  },
+  {
+    cat: '🧥 Ropa y equipo',
+    items: [
+      { key: 'ropa-camperas',     label: 'Camperas abrigadas para todos (TDF: muy frío)' },
+      { key: 'ropa-impermeable',  label: 'Rompevientos o capa impermeable' },
+      { key: 'ropa-calzado',      label: 'Calzado impermeable / botas' },
+      { key: 'ropa-gorra',        label: 'Gorra/gorro y gafas de sol' },
+      { key: 'ropa-nene',         label: 'Ropa abrigada extra para el nene (6 años)' },
+      { key: 'ropa-traje-bano',   label: 'Trajes de baño (Las Grutas, Puerto Madryn)' },
+      { key: 'ropa-guantes',      label: 'Guantes y cuello polar (Ushuaia/Calafate)' },
+    ]
+  },
+  {
+    cat: '🎒 Provisiones',
+    items: [
+      { key: 'prov-agua',            label: 'Bidones de agua (mínimo 5L para tramos largos)' },
+      { key: 'prov-snacks',          label: 'Snacks para viaje y el nene' },
+      { key: 'prov-medicamentos',    label: 'Medicamentos habituales + para el nene' },
+      { key: 'prov-protector',       label: 'Protector solar y repelente' },
+      { key: 'prov-cargador',        label: 'Cargador auto + cable + power bank' },
+      { key: 'prov-entretenimiento', label: 'Entretenimiento offline para el nene (tablet)' },
+      { key: 'prov-manta',           label: 'Manta o sleeping bag para el nene en ruta' },
+    ]
+  },
+];
 
 // ═══════════════════════════════════════════════════
 // PARADAS POR DEFECTO
@@ -156,9 +218,11 @@ const DEFAULT_STOPS = [
     nights: 0, distance: 0,
     lat: -30.7500, lng: -57.9500,
     note: 'Punto de partida. ¡Que empiece la aventura!',
+    weather: { tempMin: 20, tempMax: 34, wind: '10–25 km/h', dir: 'NE', desc: 'Caluroso y húmedo' },
+    accommodations: [],
     activities: [
       'Revisar aceite, agua, neumáticos y documentación',
-      'Cargar combustible completo antes de salir'
+      'Cargar combustible completo antes de salir',
     ]
   },
   {
@@ -167,10 +231,15 @@ const DEFAULT_STOPS = [
     nights: 1, distance: 840,
     lat: -36.6245, lng: -64.2900,
     note: 'Primera parada técnica. Tramo largo ~10h.',
+    weather: { tempMin: 16, tempMax: 36, wind: '20–45 km/h', dir: 'N/NO', desc: 'Caluroso y seco' },
+    accommodations: [
+      { name: 'Hotel Calfucurá',  price: '$55–70/n', reserved: false },
+      { name: 'Apart Nochero',    price: '$45–60/n', reserved: false },
+      { name: 'Hotel Crisantemo', price: '$40–55/n', reserved: false },
+    ],
     activities: [
       'Cargar combustible completo',
       'Laguna Don Tomás (paseo urbano con el nene)',
-      '🏠 Apart: Hotel Calfucurá, Apart Nochero, Hotel Crisantemo'
     ]
   },
   {
@@ -178,12 +247,17 @@ const DEFAULT_STOPS = [
     name: 'Las Grutas', province: 'Río Negro',
     nights: 1, distance: 650,
     lat: -40.8097, lng: -65.0847,
-    note: 'Primera costa atlántica. Acantilados y aguas cálidas.',
+    note: 'Primera costa atlántica. Acantilados y aguas cálidas (las más cálidas de la Patagonia).',
+    weather: { tempMin: 14, tempMax: 27, wind: '30–60 km/h', dir: 'SO', desc: 'Viento fresco del sur — igual el agua está cálida' },
+    accommodations: [
+      { name: 'Cabañas Brisas del Mar',      price: '$70–90/n', reserved: false },
+      { name: 'Apart Acuarela',              price: '$65–85/n', reserved: false },
+      { name: 'Complejo Turismar Las Grutas', price: '$80–100/n', reserved: false },
+    ],
     activities: [
-      'Playa principal y acantilados (nene puede chapotear, agua cálida)',
+      'Playa principal y acantilados (agua cálida, ideal para el nene)',
       'Balneario Tubería — toboganes naturales en la roca',
-      'Buceo y snorkeling en aguas transparentes',
-      '🏠 Cabañas: Brisas del Mar, Apart Acuarela, Complejo Turismar Las Grutas'
+      'Snorkeling en aguas transparentes',
     ]
   },
   {
@@ -192,12 +266,17 @@ const DEFAULT_STOPS = [
     nights: 2, distance: 250,
     lat: -42.7692, lng: -65.0385,
     note: 'Costa patagónica. Fauna marina impresionante. Base para Península Valdés.',
+    weather: { tempMin: 13, tempMax: 26, wind: '40–70 km/h', dir: 'SO', desc: 'Fresco con viento costero — llevar campera' },
+    accommodations: [
+      { name: 'La Huella Apart Hotel',    price: '$90–120/n', reserved: false },
+      { name: 'Apart Bahía Nueva',        price: '$80–110/n', reserved: false },
+      { name: 'Cabañas Patagonia Madryn', price: '$75–100/n', reserved: false },
+    ],
     activities: [
       'Playa El Doradillo — lobos marinos a metros de la orilla',
       'Punta Loma (reserva natural, lobos marinos y pingüinos)',
       'Ecocentro Puerto Madryn — perfecto para el nene',
       'Excursión Península Valdés (guanaco, maras, zorros)',
-      '🏠 Apart/cabañas: La Huella Apart Hotel, Apart Bahía Nueva, Cabañas Patagonia'
     ]
   },
   {
@@ -206,11 +285,17 @@ const DEFAULT_STOPS = [
     nights: 1, distance: 380,
     lat: -45.8653, lng: -67.4978,
     note: 'Ciudad petrolera patagónica. Parada técnica antes del gran sur.',
+    weather: { tempMin: 11, tempMax: 23, wind: '50–90 km/h', dir: 'O/SO', desc: 'Ciudad muy ventosa — rafagas frecuentes' },
+    fuelAlert: '⛽ Cargar nafta completo — próxima en Puerto San Julián (460 km)',
+    accommodations: [
+      { name: 'Lucania Palazzo Hotel', price: '$85–110/n', reserved: false },
+      { name: 'Apart Comodoro',        price: '$60–80/n',  reserved: false },
+      { name: 'Hotel Azul',            price: '$55–75/n',  reserved: false },
+    ],
     activities: [
       'Cargar combustible completo',
       'Museo Nacional del Petróleo (gratuito, muy didáctico para niños)',
       'Supermercado: provisiones para los tramos siguientes',
-      '🏠 Apart-hotel: Lucania Palazzo, Apart Comodoro, Hotel Azul'
     ]
   },
   {
@@ -218,43 +303,76 @@ const DEFAULT_STOPS = [
     name: 'Puerto San Julián', province: 'Santa Cruz',
     nights: 1, distance: 460,
     lat: -49.3150, lng: -67.7311,
-    note: 'Parada de descanso en Ruta 3. Buena para estirar las piernas y distraer al nene.',
+    note: 'Parada de descanso en Ruta 3. Fauna marina accesible y buena para el nene.',
+    weather: { tempMin: 8, tempMax: 20, wind: '60–100 km/h', dir: 'SO', desc: 'Viento patagónico fuerte — ráfagas posibles' },
+    fuelAlert: '⛽ Cargar nafta — próximo tramo 500 km hasta Río Grande',
+    accommodations: [
+      { name: 'Hotel Municipal San Julián', price: '$50–70/n', reserved: false },
+      { name: 'Hostería El Quijote',        price: '$45–65/n', reserved: false },
+      { name: 'Apart Bahía Sur',            price: '$55–75/n', reserved: false },
+    ],
     activities: [
       'Reserva Natural Ría San Julián — pingüinos, cormoranes y delfines desde la orilla',
       'Bahía San Julián — Magallanes ancló aquí en 1520 (playa tranquila para el nene)',
       'Museo Regional — historia patagónica accesible para chicos',
       'Paseo costero al atardecer',
-      'Cargar nafta y provisiones para el sur',
-      '🏠 Alojamiento: Hotel Municipal San Julián, Hostería El Quijote, Apart Bahía Sur'
     ]
   },
   {
-    id: 4, type: 'turistica',
+    id: 4, type: 'tecnica',
     name: 'Río Grande', province: 'Tierra del Fuego',
-    nights: 2, distance: 500,
+    nights: 1, distance: 500,
     lat: -53.7876, lng: -67.7073,
-    note: 'Isla Grande de TDF. Cruce por Chile vía San Sebastián (DNI + cédula auto). Base para Ushuaia.',
+    note: 'Cruce por Chile vía San Sebastián (DNI + cédula auto). Descanso antes de Ushuaia.',
+    weather: { tempMin: 4, tempMax: 13, wind: '40–80 km/h', dir: 'O', desc: 'Frío y ventoso — llevar camperas abrigadas' },
+    fuelAlert: '⛽ Cargar nafta en Río Grande antes de bajar a Ushuaia (210 km)',
+    accommodations: [
+      { name: 'Posada de los Sauces', price: '$65–85/n', reserved: false },
+      { name: 'Hotel Atlántida',      price: '$55–75/n', reserved: false },
+      { name: 'Apart Antártida',      price: '$60–80/n', reserved: false },
+    ],
     activities: [
-      '⚠️ Cruce fronterizo Chile en San Sebastián (llevar DNI/pasaporte, seguro del auto)',
-      'Día 1: Llegada, descanso y recorrida por el centro fueguino',
-      'Día 2: Excursión Ushuaia — Paso Garibaldi (ida/vuelta ~230 km)',
-      'Ushuaia: tren del Fin del Mundo, Parque Nac. Tierra del Fuego, Bahía Lapataia',
-      'Museo del Presidio de Ushuaia (impresionante para toda la familia)',
-      '🏠 Alojamiento RG: Posada de los Sauces, Hotel Atlántida, Apart Antártida'
+      '⚠️ Cruce fronterizo Chile en San Sebastián (DNI/pasaporte, seguro con cobertura Chile)',
+      'Llegada y descanso — mañana Ushuaia (210 km al sur)',
+      'Recorrida por el centro fueguino',
+    ]
+  },
+  {
+    id: 18, type: 'turistica',
+    name: 'Ushuaia', province: 'Tierra del Fuego',
+    nights: 1, distance: 210,
+    lat: -54.8019, lng: -68.3029,
+    note: '¡El Fin del Mundo! Dormir aquí hace toda la diferencia — es más tranquilo que ir y volver en el día.',
+    weather: { tempMin: 3, tempMax: 12, wind: '30–60 km/h', dir: 'O/NO', desc: 'Frío con lluvia frecuente — impermeable obligatorio' },
+    accommodations: [
+      { name: 'Hotel Los Acebos',     price: '$110–140/n', reserved: false },
+      { name: 'Apart Noi Ushuaia',    price: '$90–120/n',  reserved: false },
+      { name: 'Cabañas del Beagle',   price: '$85–110/n',  reserved: false },
+    ],
+    activities: [
+      'Tren del Fin del Mundo — experiencia única para el nene',
+      'Parque Nacional Tierra del Fuego — Bahía Lapataia, el fin de la Ruta 3',
+      'Museo del Presidio de Ushuaia — impresionante para toda la familia',
+      'Canal Beagle — navegación con lobos marinos y pingüinos',
+      '⚠️ Al salir hacia El Calafate: vuelta norte por Río Grande, cruce Chile (San Sebastián → Monte Aymond), ~820 km día largo',
     ]
   },
   {
     id: 5, type: 'turistica',
     name: 'El Calafate', province: 'Santa Cruz',
-    nights: 2, distance: 660,
+    nights: 2, distance: 820,
     lat: -50.3396, lng: -72.2752,
-    note: 'Capital de los glaciares. Reservar entrada al Glaciar Perito Moreno con anticipación.',
+    note: 'Capital de los glaciares. Llegan cruzando por Chile. Reservar Perito Moreno con anticipación.',
+    weather: { tempMin: 4, tempMax: 16, wind: '70–130 km/h', dir: 'SO', desc: 'Ráfagas extremas posibles — viento más fuerte del viaje' },
+    accommodations: [
+      { name: 'Posada Los Álamos',          price: '$120–160/n', reserved: false },
+      { name: 'Cabañas del Sol Calafate',   price: '$100–140/n', reserved: false },
+      { name: 'Apart América del Sur',      price: '$90–120/n',  reserved: false },
+    ],
     activities: [
-      '🧊 Glaciar Perito Moreno — pasarelas y trekking sobre el hielo (RESERVAR ONLINE con anticipación)',
-      'Mini-trekking Big Ice sobre el glaciar (mayores 18 años)',
-      'Lago Argentino — navegación entre témpanos (imperdible)',
-      'Centro de interpretación glaciológica (gratis, muy bueno)',
-      '🏠 Cabañas/apart: Posada Los Álamos, Cabañas del Sol Calafate, Apart América del Sur'
+      '🧊 Glaciar Perito Moreno — pasarelas (RESERVAR ONLINE con semanas de anticipación)',
+      'Lago Argentino — navegación entre témpanos',
+      'Centro de interpretación glaciológica (gratis, muy bueno para el nene)',
     ]
   },
   {
@@ -262,13 +380,18 @@ const DEFAULT_STOPS = [
     name: 'Tres Lagos', province: 'Santa Cruz',
     nights: 1, distance: 160,
     lat: -49.5667, lng: -71.5167,
-    note: 'Pequeño pueblo sobre la Ruta 40. Última noche de la ida — vuelta comienza al día siguiente.',
+    note: 'Pequeño pueblo sobre la Ruta 40. Última noche de la IDA — la vuelta comienza aquí.',
+    weather: { tempMin: 7, tempMax: 18, wind: '50–90 km/h', dir: 'SO', desc: 'Frío y ventoso, estepa patagónica' },
+    fuelAlert: '⛽ Única YPF del tramo — llenar tanque completo (470 km hasta Río Gallegos sin estación segura)',
+    accommodations: [
+      { name: 'Hostería Tres Lagos',                       price: '$40–60/n', reserved: false },
+      { name: 'Hostería La Leona (Estancia, ~80 km norte)', price: '$50–70/n', reserved: false },
+      { name: 'Camping Municipal Tres Lagos',               price: '$10–15/n', reserved: false },
+    ],
     activities: [
-      '⚠️ ~73 km de ripio en Ruta 40 desde El Calafate — máx 60-80 km/h, cuidar neumáticos del Versa',
+      '⚠️ ~73 km de ripio Ruta 40 desde El Calafate — máx 60–80 km/h, cuidar neumáticos',
       'Lagos San Martín, Tar y Viedma — paisajes patagónicos vírgenes',
-      'Observación de condores y guanacos en la estepa',
-      'Cargar nafta (única YPF del tramo)',
-      '🏠 Alojamiento: Hostería Tres Lagos, Camping Río La Leona'
+      'Observación de cóndores y guanacos en la estepa',
     ]
   },
   // ── VUELTA ───────────────────────────────────────
@@ -279,12 +402,18 @@ const DEFAULT_STOPS = [
     lat: -51.6226, lng: -69.2181,
     note: 'Capital de Santa Cruz. Primera parada de la vuelta. Inicio de Ruta 3 norte.',
     startSection: '↩️ VUELTA — Ruta 3 Norte',
+    weather: { tempMin: 7, tempMax: 18, wind: '60–110 km/h', dir: 'O/SO', desc: 'Una de las ciudades más ventosas del mundo' },
+    fuelAlert: '⛽ Cargar nafta completo — próxima parada San Julián (340 km)',
+    accommodations: [
+      { name: 'Hotel Comercio', price: '$65–85/n', reserved: false },
+      { name: 'Apart Austral',  price: '$55–75/n', reserved: false },
+      { name: 'Hotel Santa Cruz', price: '$60–80/n', reserved: false },
+    ],
     activities: [
       'Cargar nafta completo',
       'Supermercado: provisiones para Ruta 3',
       'Museo Regional Provincial "Padre Manuel Jesús Molina"',
       'Costanera del Río Gallegos',
-      '🏠 Alojamiento: Hotel Comercio, Apart Austral, Hotel Santa Cruz'
     ]
   },
   {
@@ -293,11 +422,15 @@ const DEFAULT_STOPS = [
     nights: 0, distance: 340,
     lat: -49.3150, lng: -67.7311,
     note: 'Parada opcional en Ruta 3. Subir noches a 1 si hay cansancio en ruta.',
+    weather: { tempMin: 8, tempMax: 20, wind: '60–100 km/h', dir: 'SO', desc: 'Viento patagónico fuerte' },
+    accommodations: [
+      { name: 'Hotel Municipal San Julián', price: '$50–70/n', reserved: false },
+      { name: 'Hostería El Quijote',        price: '$45–65/n', reserved: false },
+      { name: 'Apart Bahía Sur',            price: '$55–75/n', reserved: false },
+    ],
     activities: [
-      'Magallanes navegó aquí en 1520 — Bahía San Julián histórica',
-      'Reserva Natural Ría San Julián — pingüinos y gaviotas',
+      'Bahía San Julián — parada para estirar las piernas',
       'Cargar nafta y provisiones',
-      '🏠 Si se hace noche: Hotel Municipal, Hostería El Quijote'
     ]
   },
   {
@@ -306,10 +439,16 @@ const DEFAULT_STOPS = [
     nights: 1, distance: 220,
     lat: -45.9333, lng: -67.5333,
     note: 'Rada Tilly / Comodoro Rivadavia. Última parada costera — inicio cruce a los Andes por Ruta 26.',
+    weather: { tempMin: 11, tempMax: 23, wind: '40–80 km/h', dir: 'O/SO', desc: 'Viento patagónico moderado a fuerte' },
+    fuelAlert: '⛽ Cargar antes de Ruta 26 — 500 km andinos hasta El Bolsón con pocas estaciones',
+    accommodations: [
+      { name: 'Cabañas Rada Tilly',        price: '$60–80/n', reserved: false },
+      { name: 'Apart Comodoro Centro',     price: '$55–75/n', reserved: false },
+      { name: 'Hotel Austral Rada Tilly',  price: '$65–85/n', reserved: false },
+    ],
     activities: [
       'Playa Rada Tilly — tranquila y familiar',
-      'Cargar nafta completo antes de la Ruta 26',
-      '🏠 Alojamiento: Cabañas Rada Tilly, Apart Comodoro'
+      'Cargar nafta completo antes de la Ruta 26 (tramo andino)',
     ]
   },
   {
@@ -317,26 +456,37 @@ const DEFAULT_STOPS = [
     name: 'El Bolsón', province: 'Río Negro',
     nights: 1, distance: 500,
     lat: -41.9667, lng: -71.5333,
-    note: 'Cruce cordillerano por Ruta 26. Valle andino entre montañas.',
+    note: 'Valle andino con el microclima más benigno del sur. Cruce por Ruta 26.',
+    weather: { tempMin: 11, tempMax: 26, wind: '15–35 km/h', dir: 'SO', desc: 'Microclima benigno — el más cálido y soleado del sur patagónico' },
+    accommodations: [
+      { name: 'Cabañas del Bosque',     price: '$70–90/n', reserved: false },
+      { name: 'Apart La Confluencia',   price: '$65–85/n', reserved: false },
+      { name: 'Hostería Amancay',       price: '$60–80/n', reserved: false },
+    ],
     activities: [
       'Feria Artesanal del Bolsón — mar, jue, sáb y dom',
       'Cabeza del Indio — formación rocosa con vistas panorámicas',
-      'Cerro Piltriquitrón — trekking (verano)',
-      '🏠 Cabañas/apart: Cabañas del Bosque, Apart La Confluencia, Hostería Amancay'
+      'Cerro Piltriquitrón — trekking de verano',
     ]
   },
   {
     id: 14, type: 'turistica',
     name: 'San Carlos de Bariloche', province: 'Río Negro',
-    nights: 1, distance: 120,
+    nights: 2, distance: 120,
     lat: -41.1335, lng: -71.3103,
-    note: 'La Suiza argentina. Vale la pena aunque sea una noche.',
+    note: 'La Suiza argentina. 2 noches para aprovecharlo de verdad — con el nene es el punto más memorable.',
+    weather: { tempMin: 10, tempMax: 24, wind: '25–55 km/h', dir: 'O', desc: 'Agradable — ideal para actividades al aire libre en verano' },
+    accommodations: [
+      { name: 'Hotel Nahuel Huapi',           price: '$110–140/n', reserved: false },
+      { name: 'Apart Del Lago',               price: '$90–120/n',  reserved: false },
+      { name: 'Cabañas Patagonia Bariloche',  price: '$85–115/n',  reserved: false },
+    ],
     activities: [
       'Centro Cívico — arquitectura típica y vistas al lago Nahuel Huapi',
-      'Chocolate artesanal — chocolaterías Mamuschka, Rapa Nui, Del Turista',
+      'Chocolate artesanal — Mamuschka, Rapa Nui, Del Turista',
       'Cerro Campanario (teleférico) — una de las mejores vistas del mundo',
+      'Isla Victoria — bosque de arrayanes (imperdible para el nene)',
       'Paseo en catamarán por el lago Nahuel Huapi',
-      '🏠 Apart/cabañas: Hotel Nahuel Huapi, Apart Del Lago, Cabañas Patagonia'
     ]
   },
   {
@@ -344,12 +494,18 @@ const DEFAULT_STOPS = [
     name: 'Neuquén', province: 'Neuquén',
     nights: 1, distance: 440,
     lat: -38.9516, lng: -68.0591,
-    note: 'Nodo vial antes del cruce del desierto por Ruta 20 → Gral. Acha → Santa Rosa.',
+    note: 'Nodo vial antes del cruce del desierto pampeano por Ruta 20.',
+    weather: { tempMin: 17, tempMax: 35, wind: '20–50 km/h', dir: 'N/NO', desc: 'Caluroso y seco — volviendo al clima pampeano' },
+    fuelAlert: '⛽ Cargar nafta completo — Ruta 20 cruza 540 km de desierto hasta Santa Rosa',
+    accommodations: [
+      { name: 'Hotel Del Comahue', price: '$75–95/n', reserved: false },
+      { name: 'Apart Neuquén',     price: '$65–85/n', reserved: false },
+      { name: 'Hotel Ibis Neuquén', price: '$60–80/n', reserved: false },
+    ],
     activities: [
-      'Cargar nafta completo antes de Ruta 20 (cruce del desierto)',
+      'Cargar nafta completo antes de Ruta 20',
       'Supermercado y provisiones para el tramo',
-      'Parque Cretácico — dinosaurios gigantes patagónicos (imperdible con el nene)',
-      '🏠 Alojamiento: Hotel Del Comahue, Apart Neuquén, Hotel Ibis'
+      'Parque Cretácico — dinosaurios gigantes patagónicos (imperdible para el nene)',
     ]
   },
   {
@@ -358,12 +514,17 @@ const DEFAULT_STOPS = [
     nights: 1, distance: 540,
     lat: -36.6245, lng: -64.2900,
     note: 'Vuelta por Ruta 20 → cruce del desierto → Gral. Acha → Ruta 35 → Santa Rosa.',
+    weather: { tempMin: 16, tempMax: 36, wind: '20–45 km/h', dir: 'N/NO', desc: 'Caluroso y seco' },
+    accommodations: [
+      { name: 'Hotel Calfucurá',  price: '$55–70/n', reserved: false },
+      { name: 'Apart Nochero',    price: '$45–60/n', reserved: false },
+      { name: 'Hotel Crisantemo', price: '$40–55/n', reserved: false },
+    ],
     activities: [
       'Ruta 20: cruce del desierto pampeano — paisaje árido y abierto',
       'Parada en Gral. Acha para nafta/comida',
       'Laguna Don Tomás (ya la conocen)',
       'Cena de celebración — ¡casi en casa!',
-      '🏠 Apart: Hotel Calfucurá, Apart Nochero, Hotel Crisantemo'
     ]
   },
   {
@@ -372,16 +533,16 @@ const DEFAULT_STOPS = [
     nights: 0, distance: 840,
     lat: -30.7500, lng: -57.9500,
     note: '¡Último tramo! Ruta 188 → Junín → Ruta 7 → Zárate → Ruta 14 → Concordia → Chajarí.',
-    activities: [
-      '🏠 ¡Llegada a casa en Chajarí!'
-    ]
+    weather: { tempMin: 20, tempMax: 34, wind: '10–25 km/h', dir: 'NE', desc: 'Bienvenido al calor de casa' },
+    accommodations: [],
+    activities: ['🏠 ¡Llegada a casa en Chajarí!']
   }
 ];
 
 // ═══════════════════════════════════════════════════
 // ESTADO (persiste en localStorage)
 // ═══════════════════════════════════════════════════
-let state = { stops: [], expenses: [], fuelPrice: 1.10, version: 2 };
+let state = { stops: [], expenses: [], fuelPrice: 1.10, checklist: {}, version: 3 };
 let currentTab = 'itinerary';
 
 function loadState() {
@@ -389,18 +550,19 @@ function loadState() {
     const raw = localStorage.getItem('pat2027');
     if (raw) {
       const s = JSON.parse(raw);
-      if ((s.version || 1) < 2) {
-        // Itinerario actualizado — resetear paradas al nuevo recorrido
+      if ((s.version || 1) < 3) {
         state.stops     = deepClone(DEFAULT_STOPS);
         state.expenses  = s.expenses  || [];
         state.fuelPrice = s.fuelPrice || 1.10;
-        state.version   = 2;
+        state.checklist = {};
+        state.version   = 3;
         saveState();
       } else {
         state.stops     = s.stops     || deepClone(DEFAULT_STOPS);
         state.expenses  = s.expenses  || [];
         state.fuelPrice = s.fuelPrice || 1.10;
-        state.version   = 2;
+        state.checklist = s.checklist || {};
+        state.version   = 3;
       }
     } else {
       state.stops = deepClone(DEFAULT_STOPS);
@@ -439,14 +601,11 @@ function calcDates() {
   const stops = state.stops;
   stops[0].arrival   = new Date(TRIP.startDate);
   stops[0].departure = new Date(TRIP.startDate);
-
   for (let i = 1; i < stops.length; i++) {
-    // Llegás el mismo día que salís de la parada anterior (el viaje es de un día)
     stops[i].arrival   = new Date(stops[i - 1].departure);
     stops[i].departure = addDays(stops[i].arrival, stops[i].nights);
   }
-
-  const lastStop   = stops[stops.length - 1];
+  const lastStop  = stops[stops.length - 1];
   const returnHome = new Date(lastStop.arrival);
   const totalDays  = daysBetween(TRIP.startDate, returnHome);
   return { totalDays, returnHome };
@@ -457,11 +616,11 @@ function calcDates() {
 // ═══════════════════════════════════════════════════
 function totalNights() { return state.stops.reduce((s, p) => s + p.nights, 0); }
 function totalKm()     { return state.stops.reduce((s, p) => s + p.distance, 0); }
-function totalSpent()  { return state.expenses.reduce((s, e) => s + (e.hotel || 0) + (e.food || 0) + (e.other || 0), 0); }
+function totalSpent()  { return state.expenses.reduce((s, e) => s + (e.hotel||0) + (e.food||0) + (e.other||0), 0); }
 function budgetLeft()  { return TRIP.budget - totalSpent(); }
 
 // ═══════════════════════════════════════════════════
-// LINKS DE GOOGLE MAPS (Android Auto)
+// LINKS DE GOOGLE MAPS
 // ═══════════════════════════════════════════════════
 function mapsLink(from, to) {
   const origin = (from.lat && from.lng)
@@ -478,9 +637,8 @@ function mapsLink(from, to) {
 // ═══════════════════════════════════════════════════
 function renderHeader() {
   const { totalDays } = calcDates();
-  const over  = totalDays > TRIP.maxDays;
-  const pct   = Math.min(100, Math.round((totalDays / TRIP.maxDays) * 100));
-
+  const over = totalDays > TRIP.maxDays;
+  const pct  = Math.min(100, Math.round((totalDays / TRIP.maxDays) * 100));
   document.getElementById('day-counter').innerHTML = `
     <div class="flex flex-col items-end">
       <div class="text-2xl font-black leading-none ${over ? 'text-red-400' : 'text-green-400'}">${totalDays}
@@ -488,10 +646,49 @@ function renderHeader() {
       </div>
       <div class="text-xs mt-0.5 ${over ? 'text-red-400' : 'text-blue-300'}">${over ? '⚠ excede' : '✓ en plazo'}</div>
     </div>`;
-
   const bar = document.getElementById('progress-bar');
   bar.style.width = pct + '%';
   bar.className = `h-full rounded-full transition-all duration-500 ${over ? 'bg-red-500' : pct > 80 ? 'bg-yellow-400' : 'bg-blue-400'}`;
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER: BLOQUE CLIMA
+// ═══════════════════════════════════════════════════
+function weatherBlock(w) {
+  if (!w) return '';
+  const windColor = parseInt(w.wind) > 80 ? 'text-red-300' : parseInt(w.wind) > 50 ? 'text-orange-300' : 'text-yellow-300';
+  return `<div class="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-gray-700/60 text-xs">
+    <span class="flex items-center gap-1 bg-blue-950 border border-blue-900 px-2 py-0.5 rounded-full">
+      🌡️ <span class="text-blue-300 font-semibold">${w.tempMin}°–${w.tempMax}°C</span>
+    </span>
+    <span class="flex items-center gap-1 bg-gray-800 border border-gray-700 px-2 py-0.5 rounded-full">
+      💨 <span class="${windColor} font-semibold">${w.wind}</span>
+      <span class="text-gray-400">${w.dir}</span>
+    </span>
+    <span class="text-gray-500 self-center italic">${w.desc}</span>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER: BLOQUE ALOJAMIENTO
+// ═══════════════════════════════════════════════════
+function accommodationBlock(stop) {
+  if (!stop.accommodations || stop.accommodations.length === 0) return '';
+  return `<div class="mt-2 pt-2 border-t border-gray-700/60">
+    <div class="text-xs text-gray-500 mb-1.5 font-semibold uppercase tracking-wide">🏨 Alojamiento sugerido</div>
+    <div class="space-y-1">
+      ${stop.accommodations.map((acc, ai) => `
+        <div class="flex items-center gap-2">
+          <div class="flex-1 min-w-0">
+            <span class="text-sm ${acc.reserved ? 'text-green-400 font-semibold' : 'text-gray-300'}">${acc.name}</span>
+            <span class="text-xs text-gray-500 ml-1.5">${acc.price}</span>
+          </div>
+          <button onclick="toggleReserved(${stop.id}, ${ai})" class="press shrink-0 text-xs px-2.5 py-1 rounded-full font-semibold transition-colors ${acc.reserved ? 'bg-green-900 text-green-300 border border-green-700' : 'bg-gray-800 text-gray-500 border border-gray-700'}">
+            ${acc.reserved ? '✓ Reservado' : 'Reservar'}
+          </button>
+        </div>`).join('')}
+    </div>
+  </div>`;
 }
 
 // ═══════════════════════════════════════════════════
@@ -516,7 +713,6 @@ function renderItinerary() {
 
   let html = '';
 
-  // Alerta de días
   if (over) {
     const excess = totalDays - TRIP.maxDays;
     html += `<div class="mx-3 mt-3 bg-red-950 border border-red-700 rounded-xl p-3 flex gap-3">
@@ -526,7 +722,6 @@ function renderItinerary() {
     </div>`;
   }
 
-  // Resumen rápido
   html += `<div class="mx-3 mt-3 card p-4 grid grid-cols-4 gap-2 text-center">
     <div><div class="text-lg font-black text-blue-400">${nights}</div><div class="text-gray-500 text-xs">noches</div></div>
     <div><div class="text-lg font-black text-violet-400">${(km/1000).toFixed(1)}k</div><div class="text-gray-500 text-xs">km</div></div>
@@ -534,14 +729,12 @@ function renderItinerary() {
     <div><div class="text-lg font-black text-amber-400">$${budgetLeft().toFixed(0)}</div><div class="text-gray-500 text-xs">restante</div></div>
   </div>`;
 
-  // Paradas
   stops.forEach((stop, idx) => {
     const prev   = idx > 0 ? stops[idx - 1] : null;
     const isOrig = stop.type === 'origen';
     const isDest = stop.type === 'destino';
     const canEdit = !isOrig && !isDest;
 
-    // Conector entre paradas + botón insertar
     if (idx > 0) {
       if (stop.startSection) {
         html += `<div class="mx-3 my-3 flex items-center gap-2">
@@ -552,19 +745,26 @@ function renderItinerary() {
       }
       const horas  = Math.round(stop.distance / 80);
       const litros = (stop.distance * TRIP.consumption / 100).toFixed(0);
-      const alertL = stop.distance > 700 ? '<span class="text-yellow-400">⚡ tramo largo</span>' : '';
+      const alertL = stop.distance > 700 ? '<span class="text-yellow-400 font-semibold">⚡ tramo largo</span>' : '';
       const ripioAlert = stop.id === 9 ? '<span class="ml-1 px-1.5 py-0.5 rounded bg-orange-900 border border-orange-600 text-orange-300 text-xs font-semibold">🪨 ~73 km ripio</span>' : '';
+
+      // Alerta de nafta del tramo anterior
+      const fuelWarn = prev && prev.fuelAlert
+        ? `<div class="flex items-start gap-1.5 mt-1.5 px-1 py-1 bg-yellow-950 border border-yellow-800 rounded-lg text-xs text-yellow-300"><span class="shrink-0">⚠️</span><span>${prev.fuelAlert}</span></div>`
+        : '';
+
       html += `<div class="flex ml-6 my-0.5">
         <div class="dashed-line ml-3 pl-4 py-2 flex-1">
           <div class="flex items-center gap-1.5 flex-wrap">
             <span class="text-gray-500 text-xs">🚗</span>
             <input type="number" value="${stop.distance}" min="0" step="10"
-              class="w-16 bg-gray-800 border border-gray-700 rounded-md px-1.5 py-0.5 text-xs text-blue-300 font-bold text-center focus:border-blue-500 focus:outline-none focus:bg-gray-700 transition-colors"
+              class="w-16 bg-gray-800 border border-gray-700 rounded-md px-1.5 py-0.5 text-xs text-blue-300 font-bold text-center focus:border-blue-500 focus:outline-none transition-colors"
               onchange="updateDistance(${stop.id}, this.value)"
               onclick="this.select()">
             <span class="text-xs text-gray-500">km &nbsp;·&nbsp; ~${horas}h &nbsp;·&nbsp; ${litros}L &nbsp;${alertL}</span>
             ${ripioAlert}
           </div>
+          ${fuelWarn}
           <div class="flex flex-wrap gap-3 mt-1">
             ${!isDest && prev ? `<a href="${mapsLink(prev, stop)}" target="_blank"
               class="press inline-flex items-center gap-1 text-xs text-blue-500 font-semibold">
@@ -577,7 +777,6 @@ function renderItinerary() {
       </div>`;
     }
 
-    // Card de parada
     html += `<div class="mx-3 my-1.5 card overflow-hidden shadow-lg">
       <div class="p-4 pb-3">
         <div class="flex justify-between items-start gap-2">
@@ -597,7 +796,10 @@ function renderItinerary() {
         </div>
         ${stop.note ? `<p class="text-xs text-gray-400 mt-2 leading-relaxed">${stop.note}</p>` : ''}
 
-        <!-- Actividades editables -->
+        <!-- Clima -->
+        ${weatherBlock(stop.weather)}
+
+        <!-- Actividades -->
         <div class="mt-2 space-y-0.5">
           ${(stop.activities || []).map((a, ai) => `
             <div class="flex items-center gap-1">
@@ -613,6 +815,9 @@ function renderItinerary() {
           <button onclick="addActivity(${stop.id})"
             class="press bg-gray-700 hover:bg-gray-600 text-blue-400 font-bold px-3 rounded-lg text-sm transition-colors">＋</button>
         </div>
+
+        <!-- Alojamiento -->
+        ${accommodationBlock(stop)}
       </div>
 
       ${canEdit ? `<div class="border-t border-gray-700 px-4 py-2.5 flex items-center justify-between bg-gray-900 bg-opacity-30">
@@ -628,7 +833,6 @@ function renderItinerary() {
     </div>`;
   });
 
-  // Fecha de regreso estimada
   const onTime = returnHome <= TRIP.deadline;
   html += `<div class="mx-3 my-4 text-center">
     <div class="text-xs text-gray-500 mb-0.5">Regreso estimado a Chajarí</div>
@@ -653,7 +857,6 @@ function renderFinanzas() {
   const avgDay   = days > 0 ? (spent / days).toFixed(0) : 0;
 
   let html = `
-  <!-- Resumen presupuesto -->
   <div class="mx-3 mt-3 card p-4">
     <div class="flex justify-between items-baseline mb-3">
       <h2 class="font-bold">Presupuesto Total</h2>
@@ -677,12 +880,10 @@ function renderFinanzas() {
       </div>
     </div>
     <div class="mt-2 text-xs text-gray-500 text-center">
-      $200 USD/día &nbsp;·&nbsp; ${totalNights()} noches planificadas
-      &nbsp;·&nbsp; Días registrados: ${days}
+      $200 USD/día &nbsp;·&nbsp; ${totalNights()} noches planificadas &nbsp;·&nbsp; Días registrados: ${days}
     </div>
   </div>
 
-  <!-- Formulario de carga -->
   <div class="mx-3 mt-3 card p-4">
     <h3 class="font-bold mb-3">➕ Registrar Gasto del Día</h3>
     <div class="space-y-2.5">
@@ -725,7 +926,6 @@ function renderFinanzas() {
     </div>
   </div>
 
-  <!-- Lista de gastos -->
   <div class="mx-3 mt-3">
     <h3 class="font-bold mb-2 text-gray-300">Historial de Gastos</h3>`;
 
@@ -734,8 +934,8 @@ function renderFinanzas() {
   } else {
     const sorted = [...state.expenses].sort((a, b) => a.date < b.date ? 1 : -1);
     sorted.forEach(exp => {
-      const total = (exp.hotel || 0) + (exp.food || 0) + (exp.other || 0);
-      const d     = new Date(exp.date + 'T12:00:00');
+      const total = (exp.hotel||0) + (exp.food||0) + (exp.other||0);
+      const d = new Date(exp.date + 'T12:00:00');
       html += `<div class="card p-3 mb-2 flex justify-between items-start">
         <div class="flex-1 min-w-0">
           <div class="font-semibold text-sm truncate">${exp.place || '—'}</div>
@@ -774,7 +974,6 @@ function renderCombustible() {
   let html = `
   <div class="mx-3 mt-3 card p-4">
     <h2 class="font-bold text-lg mb-4">⛽ Calculadora de Combustible</h2>
-
     <div class="mb-4">
       <label class="text-xs text-gray-400 mb-1.5 block">Precio estimado del litro (USD)</label>
       <div class="flex gap-2 items-center">
@@ -785,7 +984,6 @@ function renderCombustible() {
       </div>
       <div class="text-xs text-gray-500 mt-1">Referencia: nafta súper en Argentina ≈ $0.80–1.30 USD/L según cotización dólar.</div>
     </div>
-
     <div class="grid grid-cols-2 gap-2.5">
       <div class="bg-gray-900 rounded-xl p-3 text-center">
         <div class="text-2xl font-black text-blue-400">${km.toLocaleString()}</div>
@@ -809,7 +1007,6 @@ function renderCombustible() {
     </div>
   </div>
 
-  <!-- Detalle por tramo -->
   <div class="mx-3 mt-3">
     <h3 class="font-bold mb-2 text-gray-300">Detalle por Tramo</h3>`;
 
@@ -825,11 +1022,12 @@ function renderCombustible() {
       <div class="flex justify-between items-start">
         <div class="flex-1 min-w-0">
           <div class="font-semibold text-sm truncate">${prev.name} → ${stop.name}</div>
-          <div class="text-xs text-gray-500 mt-0.5">${stop.distance} km &nbsp;·&nbsp; ~${horas}h de ruta &nbsp;·&nbsp; ${litT} L</div>
+          <div class="text-xs text-gray-500 mt-0.5">${stop.distance} km &nbsp;·&nbsp; ~${horas}h &nbsp;·&nbsp; ${litT} L</div>
           <div class="text-xs text-gray-600">Costo combustible: $${costoT} USD</div>
+          ${stop.id === 9 ? '<div class="text-xs text-orange-400 mt-0.5">🪨 ~73 km de ripio — máx 60–80 km/h</div>' : ''}
         </div>
         <div class="flex flex-col items-end gap-1 ml-2 shrink-0">
-          ${largo ? `<span class="badge bg-yellow-900 text-yellow-300">⚡ 2 días</span>` : ''}
+          ${largo ? `<span class="badge bg-yellow-900 text-yellow-300">⚡ día largo</span>` : ''}
         </div>
       </div>
       ${stop.type !== 'destino' ? `<a href="${mapsLink(prev, stop)}" target="_blank"
@@ -843,6 +1041,57 @@ function renderCombustible() {
 }
 
 // ═══════════════════════════════════════════════════
+// RENDER: CHECKLIST
+// ═══════════════════════════════════════════════════
+function renderLista() {
+  const totalItems = CHECKLIST_DEF.reduce((s, c) => s + c.items.length, 0);
+  const doneItems  = CHECKLIST_DEF.reduce((s, c) => s + c.items.filter(i => state.checklist[i.key]).length, 0);
+  const pct = totalItems > 0 ? Math.round(doneItems / totalItems * 100) : 0;
+  const barColor = pct === 100 ? 'bg-green-500' : pct > 60 ? 'bg-blue-500' : 'bg-yellow-500';
+
+  let html = `
+  <div class="mx-3 mt-3 card p-4">
+    <div class="flex justify-between items-baseline mb-2">
+      <h2 class="font-bold text-lg">✅ Lista de Preparación</h2>
+      <span class="text-sm font-bold ${pct === 100 ? 'text-green-400' : 'text-gray-400'}">${doneItems}/${totalItems}</span>
+    </div>
+    <div class="bg-gray-700 rounded-full h-2 overflow-hidden">
+      <div class="${barColor} h-full rounded-full transition-all duration-500" style="width:${pct}%"></div>
+    </div>
+    ${pct === 100 ? '<div class="text-center text-green-400 font-bold mt-2 text-sm">🎉 ¡Todo listo para el viaje!</div>' : ''}
+  </div>`;
+
+  CHECKLIST_DEF.forEach(cat => {
+    const done  = cat.items.filter(i => state.checklist[i.key]).length;
+    const total = cat.items.length;
+    html += `<div class="mx-3 mt-3 card p-4">
+      <div class="flex justify-between items-center mb-2.5">
+        <h3 class="font-bold">${cat.cat}</h3>
+        <span class="text-xs text-gray-500">${done}/${total}</span>
+      </div>
+      <div class="space-y-1.5">
+        ${cat.items.map(item => `
+          <button onclick="toggleCheck('${item.key}')" class="check-item w-full flex items-center gap-2.5 px-3 py-2 rounded-xl ${state.checklist[item.key] ? 'bg-green-950 border border-green-900' : 'bg-gray-800 border border-gray-700'} text-left press">
+            <span class="text-base shrink-0 leading-none">${state.checklist[item.key] ? '✅' : '⬜'}</span>
+            <span class="text-sm ${state.checklist[item.key] ? 'text-green-300 line-through' : 'text-gray-200'}">${item.label}</span>
+          </button>`).join('')}
+      </div>
+    </div>`;
+  });
+
+  html += `<div class="mx-3 mt-3 mb-2 flex gap-2">
+    <button onclick="resetChecklist()" class="press flex-1 bg-gray-800 border border-gray-700 text-gray-400 font-medium py-2.5 rounded-xl text-sm transition-colors">
+      Desmarcar todo
+    </button>
+    <button onclick="checkAll()" class="press flex-1 bg-green-900 border border-green-800 text-green-300 font-medium py-2.5 rounded-xl text-sm transition-colors">
+      Marcar todo ✓
+    </button>
+  </div><div class="h-2"></div>`;
+
+  document.getElementById('tab-lista').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════
 // RENDER: INFO
 // ═══════════════════════════════════════════════════
 function renderInfo() {
@@ -853,7 +1102,6 @@ function renderInfo() {
     <h3 class="font-bold text-lg mb-3">🚗 Vehículo</h3>
     <div class="space-y-2 text-sm">
       <div class="flex justify-between"><span class="text-gray-400">Modelo</span><span class="font-medium">Nissan Versa 2023</span></div>
-      <div class="flex justify-between"><span class="text-gray-400">Kilometraje</span><span>~50.000 km</span></div>
       <div class="flex justify-between"><span class="text-gray-400">Consumo ruta</span><span>6 L / 100 km</span></div>
       <div class="flex justify-between"><span class="text-gray-400">Autonomía</span><span>~700 km / tanque</span></div>
       <div class="flex justify-between"><span class="text-gray-400">Tripulantes</span><span>3 adultos + 1 niño (6 años)</span></div>
@@ -872,7 +1120,33 @@ function renderInfo() {
       <div class="flex justify-between"><span class="text-gray-400">Días disponibles</span><span>21 días</span></div>
       <div class="flex justify-between"><span class="text-gray-400">Presupuesto diario</span><span>$200 USD (hotel + comida)</span></div>
       <div class="flex justify-between"><span class="text-gray-400">Presupuesto total</span><span class="font-medium text-green-400">$4.200 USD</span></div>
-      <div class="flex justify-between"><span class="text-gray-400">Origen</span><span>Chajarí, Entre Ríos</span></div>
+      <div class="flex justify-between"><span class="text-gray-400">Origen/Destino</span><span>Chajarí, Entre Ríos</span></div>
+    </div>
+  </div>
+
+  <!-- Clima de referencia enero -->
+  <div class="card p-4">
+    <h3 class="font-bold text-lg mb-3">🌡️ Clima de Referencia — Enero</h3>
+    <p class="text-xs text-gray-500 mb-3">Promedios históricos. El viento es el factor más importante en la Patagonia.</p>
+    <div class="space-y-2">
+      ${state.stops.filter(s => s.weather && s.type !== 'destino' && s.id !== 0).map(s => {
+        const w = s.weather;
+        const windVal = parseInt(w.wind);
+        const windColor = windVal > 80 ? 'text-red-400' : windVal > 50 ? 'text-orange-400' : 'text-yellow-400';
+        return `<div class="flex items-center gap-2 py-1.5 border-b border-gray-700/40 last:border-0">
+          <div class="w-32 shrink-0">
+            <div class="text-sm font-semibold truncate">${s.name}</div>
+            <div class="text-xs text-gray-500">${s.province}</div>
+          </div>
+          <div class="flex-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs">
+            <span class="text-blue-300">🌡️ ${w.tempMin}°–${w.tempMax}°C</span>
+            <span class="${windColor}">💨 ${w.wind} ${w.dir}</span>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="mt-3 bg-orange-950 border border-orange-800 rounded-lg p-2.5 text-xs text-orange-300">
+      ⚠️ <strong>Viento:</strong> en Santa Cruz y TDF puede superar 100 km/h. Reducí velocidad, agarrá firme el volante al cruzar camiones y nunca abras puertas del lado del viento.
     </div>
   </div>
 
@@ -880,41 +1154,84 @@ function renderInfo() {
   <div class="card p-4">
     <h3 class="font-bold text-lg mb-3">🛂 Cruce por Chile (TDF)</h3>
     <div class="space-y-2 text-xs text-gray-300 leading-relaxed">
-      <p>Para llegar a Tierra del Fuego en auto <strong>cruzás brevemente por territorio chileno</strong> por el paso San Sebastián (sin ferry, solo tierra).</p>
-      <p>Lo mismo al regresar hacia El Calafate.</p>
+      <p>Para llegar a Tierra del Fuego y a Ushuaia <strong>cruzás dos veces por Chile</strong>: en la IDA y en la vuelta hacia El Calafate.</p>
+      <p><strong>Paso San Sebastián</strong>: Río Grande ↔ Chile (sin ferry, solo tierra). Mismo paso para ir y volver.</p>
+      <p><strong>Paso Monte Aymond</strong>: Chile → Río Gallegos (al volver desde Ushuaia hacia El Calafate).</p>
       <div class="bg-gray-900 rounded-lg p-2.5 mt-2 space-y-1.5">
-        <div>✅ DNI vigente (o pasaporte) de todos los tripulantes</div>
+        <div>✅ DNI vigente de todos (o pasaporte)</div>
         <div>✅ Cédula verde o azul del vehículo</div>
         <div>✅ Seguro con cobertura en Chile</div>
-        <div>✅ No ingresar frutas, verduras ni carnes al cruce</div>
+        <div>✅ No ingresar frutas, verduras ni carnes</div>
         <div>✅ Declarar al SENASA al salir de Argentina</div>
       </div>
     </div>
   </div>
 
-  <!-- Tips Patagonia -->
+  <!-- Emergencias -->
+  <div class="card p-4">
+    <h3 class="font-bold text-lg mb-3">🆘 Números de Emergencia</h3>
+    <div class="space-y-2 text-sm">
+      <div class="flex justify-between items-center">
+        <span class="text-gray-400">Emergencias generales</span>
+        <a href="tel:911" class="press text-blue-400 font-bold text-lg">911</a>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="text-gray-400">Ambulancia SAME</span>
+        <a href="tel:107" class="press text-blue-400 font-bold text-lg">107</a>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="text-gray-400">Bomberos</span>
+        <a href="tel:100" class="press text-blue-400 font-bold text-lg">100</a>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="text-gray-400">Gendarmería Nacional</span>
+        <a href="tel:0800-888-4362" class="press text-blue-400 font-semibold text-sm">0800-888-4362</a>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="text-gray-400">ACA asistencia en ruta</span>
+        <a href="tel:0800-333-4222" class="press text-blue-400 font-semibold text-sm">0800-333-4222</a>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="text-gray-400">Vialidad Nacional</span>
+        <a href="tel:0800-345-3775" class="press text-blue-400 font-semibold text-sm">0800-345-3775</a>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="text-gray-400">Defensa Civil</span>
+        <a href="tel:103" class="press text-blue-400 font-bold text-lg">103</a>
+      </div>
+    </div>
+    <div class="mt-2 text-xs text-gray-600 text-center">Guardá estos números también en contactos del teléfono — puede no haber señal para buscarlos.</div>
+  </div>
+
+  <!-- Tips -->
   <div class="card p-4">
     <h3 class="font-bold text-lg mb-3">🧭 Tips Esenciales Patagonia</h3>
     <div class="space-y-2.5 text-xs text-gray-300">
       <div class="flex gap-2.5"><span class="text-lg shrink-0">🌬️</span><span><strong>Viento patagónico:</strong> en Santa Cruz puede superar 100 km/h. Reducí velocidad y agarrá firme el volante al cruzar camiones.</span></div>
-      <div class="flex gap-2.5"><span class="text-lg shrink-0">⛽</span><span><strong>Combustible:</strong> cargá siempre arriba del 50%. Hay tramos de más de 200 km sin estaciones en Ruta 40.</span></div>
+      <div class="flex gap-2.5"><span class="text-lg shrink-0">⛽</span><span><strong>Combustible:</strong> cargá siempre arriba del 50%. Hay tramos de más de 200 km sin estaciones en Ruta 40 y en el cruce a Ushuaia.</span></div>
       <div class="flex gap-2.5"><span class="text-lg shrink-0">📶</span><span><strong>Sin señal:</strong> amplias zonas de Patagonia no tienen cobertura. Esta app funciona 100% offline.</span></div>
-      <div class="flex gap-2.5"><span class="text-lg shrink-0">🌡️</span><span><strong>Clima enero:</strong> verano, pero en TDF y Calafate las mañanas son frías. Llevá camperas para todos.</span></div>
-      <div class="flex gap-2.5"><span class="text-lg shrink-0">🦺</span><span><strong>Kit obligatorio:</strong> 2 triángulos, chaleco reflectante, matafuegos, botiquín, linterna. Multa sin esto.</span></div>
+      <div class="flex gap-2.5"><span class="text-lg shrink-0">🌡️</span><span><strong>Clima enero:</strong> Ushuaia y Calafate máx ~12°C. El nene necesita campera y gorro incluso en verano.</span></div>
+      <div class="flex gap-2.5"><span class="text-lg shrink-0">🦺</span><span><strong>Kit obligatorio:</strong> 2 triángulos, chaleco reflectante, matafuegos, botiquín. Multa sin esto.</span></div>
       <div class="flex gap-2.5"><span class="text-lg shrink-0">🏔️</span><span><strong>Glaciar Perito Moreno:</strong> reservar entrada online con semanas de anticipación en temporada alta.</span></div>
-      <div class="flex gap-2.5"><span class="text-lg shrink-0">🐧</span><span><strong>Ballenas en Madryn:</strong> enero es temporada de lobos marinos y delfines; ballenas francas en mayo–noviembre.</span></div>
-      <div class="flex gap-2.5"><span class="text-lg shrink-0">🛣️</span><span><strong>Ruta 40:</strong> algunos tramos son ripio. Con Versa hay que ir a 60–80 km/h máximo para no dañar neumáticos.</span></div>
+      <div class="flex gap-2.5"><span class="text-lg shrink-0">🛣️</span><span><strong>Ruta 40:</strong> ~73 km de ripio antes de Tres Lagos. Con Versa ir a 60–80 km/h máx para no dañar neumáticos.</span></div>
+      <div class="flex gap-2.5"><span class="text-lg shrink-0">🧒</span><span><strong>Con el nene:</strong> Bariloche (bosque arrayanes, teleférico) y Ushuaia (tren del fin del mundo) serán sus favoritos.</span></div>
     </div>
   </div>
 
   <!-- Configuración -->
   <div class="card p-4">
     <h3 class="font-bold mb-3">⚙️ Configuración</h3>
-    <button onclick="resetApp()"
-      class="press w-full bg-red-950 border border-red-800 text-red-300 font-medium py-2.5 rounded-xl transition-colors text-sm">
-      🔄 Restaurar valores originales
-    </button>
-    <p class="text-xs text-gray-600 mt-2 text-center">Restaura noches predeterminadas y borra todos los gastos registrados.</p>
+    <div class="space-y-2">
+      <button onclick="exportItinerary()"
+        class="press w-full bg-blue-900 border border-blue-700 text-blue-300 font-medium py-2.5 rounded-xl text-sm transition-colors">
+        📤 Exportar / Compartir itinerario
+      </button>
+      <button onclick="resetApp()"
+        class="press w-full bg-red-950 border border-red-800 text-red-300 font-medium py-2.5 rounded-xl text-sm transition-colors">
+        🔄 Restaurar valores originales
+      </button>
+    </div>
+    <p class="text-xs text-gray-600 mt-2 text-center">Restaurar borra noches modificadas y gastos registrados.</p>
   </div>
 
   </div><div class="h-2"></div>`;
@@ -923,7 +1240,7 @@ function renderInfo() {
 }
 
 // ═══════════════════════════════════════════════════
-// ACCIONES
+// ACCIONES — ITINERARIO
 // ═══════════════════════════════════════════════════
 function changeNights(id, delta) {
   const stop = state.stops.find(s => s.id === id);
@@ -945,6 +1262,17 @@ function updateDistance(stopId, val) {
   if (currentTab === 'combustible') renderCombustible();
 }
 
+function toggleReserved(stopId, accIdx) {
+  const stop = state.stops.find(s => s.id === stopId);
+  if (!stop || !stop.accommodations || !stop.accommodations[accIdx]) return;
+  stop.accommodations[accIdx].reserved = !stop.accommodations[accIdx].reserved;
+  saveState();
+  renderItinerary();
+}
+
+// ═══════════════════════════════════════════════════
+// ACCIONES — FINANZAS
+// ═══════════════════════════════════════════════════
 function addExpense() {
   const date  = document.getElementById('exp-date').value;
   const place = document.getElementById('exp-place').value.trim();
@@ -957,12 +1285,9 @@ function addExpense() {
     alert('Ingresá la fecha y al menos un monto.');
     return;
   }
-
   state.expenses.push({ id: Date.now().toString(), date, place, hotel, food, other, note });
   saveState();
   renderFinanzas();
-
-  // Limpiar campos de montos y nota, conservar fecha y lugar
   ['exp-hotel', 'exp-food', 'exp-other', 'exp-note'].forEach(id => {
     document.getElementById(id).value = '';
   });
@@ -980,13 +1305,69 @@ function updateFuelPrice(val) {
   renderCombustible();
 }
 
+// ═══════════════════════════════════════════════════
+// ACCIONES — CHECKLIST
+// ═══════════════════════════════════════════════════
+function toggleCheck(key) {
+  state.checklist[key] = !state.checklist[key];
+  saveState();
+  renderLista();
+}
 
+function resetChecklist() {
+  state.checklist = {};
+  saveState();
+  renderLista();
+}
+
+function checkAll() {
+  CHECKLIST_DEF.forEach(cat => cat.items.forEach(item => { state.checklist[item.key] = true; }));
+  saveState();
+  renderLista();
+}
+
+// ═══════════════════════════════════════════════════
+// ACCIONES — EXPORT
+// ═══════════════════════════════════════════════════
+function exportItinerary() {
+  const { totalDays, returnHome } = calcDates();
+  let text = `🏔️ PATAGONIA 2027 — AL FIN DEL MUNDO\n`;
+  text += `Salida: 2 enero 2027 | Regreso: ${fmtDate(returnHome)}\n`;
+  text += `${totalDays} días · ${totalKm().toLocaleString()} km · ${totalNights()} noches\n\n`;
+  state.stops.forEach((stop, idx) => {
+    if (stop.type === 'origen') {
+      text += `🟢 ORIGEN: ${stop.name}, ${stop.province}\n`;
+    } else if (stop.type === 'destino') {
+      text += `\n🏠 REGRESO: ${stop.name} — ${fmtDate(stop.arrival)}\n`;
+    } else {
+      if (stop.startSection) text += `\n——— ${stop.startSection} ———\n`;
+      const res = stop.accommodations && stop.accommodations.find(a => a.reserved);
+      text += `${idx}. ${stop.name}, ${stop.province}\n`;
+      text += `   📅 ${fmtDate(stop.arrival)}${stop.nights > 0 ? ' → ' + fmtDate(stop.departure) : ''} (${stop.nights}n, ${stop.distance} km)\n`;
+      if (res) text += `   🏨 Reservado: ${res.name} ${res.price}\n`;
+    }
+  });
+  text += `\nGenerado con la app Patagonia 2027`;
+
+  if (navigator.share) {
+    navigator.share({ title: '🏔️ Patagonia 2027', text });
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => alert('¡Itinerario copiado al portapapeles!'));
+  } else {
+    alert(text);
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// RESET
+// ═══════════════════════════════════════════════════
 function resetApp() {
-  if (!confirm('¿Restaurar todo a los valores originales? Se perderán los gastos registrados.')) return;
+  if (!confirm('¿Restaurar todo a los valores originales? Se perderán noches modificadas y gastos.')) return;
   state.stops     = deepClone(DEFAULT_STOPS);
   state.expenses  = [];
   state.fuelPrice = 1.10;
-  state.version   = 2;
+  state.checklist = {};
+  state.version   = 3;
   saveState();
   render();
 }
@@ -996,11 +1377,9 @@ function resetApp() {
 // ═══════════════════════════════════════════════════
 function switchTab(tab) {
   currentTab = tab;
-
   document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
   const pane = document.getElementById('tab-' + tab);
   pane.classList.remove('hidden');
-  // Re-trigger animation
   pane.classList.remove('fade');
   void pane.offsetWidth;
   pane.classList.add('fade');
@@ -1014,9 +1393,10 @@ function switchTab(tab) {
   activeBtn.classList.remove('text-gray-400');
 
   renderHeader();
-  if (tab === 'finanzas')    renderFinanzas();
+  if (tab === 'finanzas')     renderFinanzas();
   else if (tab === 'combustible') renderCombustible();
-  else if (tab === 'info')   renderInfo();
+  else if (tab === 'lista')   renderLista();
+  else if (tab === 'info')    renderInfo();
 }
 
 // ═══════════════════════════════════════════════════
@@ -1028,6 +1408,7 @@ function render() {
   renderItinerary();
   if (currentTab === 'finanzas')     renderFinanzas();
   if (currentTab === 'combustible')  renderCombustible();
+  if (currentTab === 'lista')        renderLista();
   if (currentTab === 'info')         renderInfo();
 }
 
@@ -1040,7 +1421,7 @@ function openStopModal(afterIdx) {
   _insertAfter = afterIdx;
   ['ns-name','ns-province','ns-note','ns-km'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('ns-nights').value = '1';
-  document.getElementById('ns-type').value = 'turistica';
+  document.getElementById('ns-type').value   = 'turistica';
   const ov = document.getElementById('modal-overlay');
   const sh = document.getElementById('modal-sheet');
   ov.classList.add('open');
@@ -1056,20 +1437,20 @@ function closeStopModal() {
 function confirmAddStop() {
   const name = document.getElementById('ns-name').value.trim();
   if (!name) { alert('Ingresá el nombre de la ciudad.'); return; }
-
   const newStop = {
-    id: Date.now(),
+    id:       Date.now(),
     type:     document.getElementById('ns-type').value,
     name,
     province: document.getElementById('ns-province').value.trim(),
     nights:   parseInt(document.getElementById('ns-nights').value) || 0,
-    distance: parseInt(document.getElementById('ns-km').value) || 0,
+    distance: parseInt(document.getElementById('ns-km').value)     || 0,
     lat: 0, lng: 0,
     note:     document.getElementById('ns-note').value.trim(),
+    weather:  null,
+    accommodations: [],
     activities: [],
     custom: true,
   };
-
   state.stops.splice(_insertAfter + 1, 0, newStop);
   saveState();
   closeStopModal();
@@ -1101,7 +1482,6 @@ function addActivity(stopId) {
   input.value = '';
   saveState();
   renderItinerary();
-  // Restaurar foco después del re-render
   const restored = document.getElementById(`act-${stopId}`);
   if (restored) restored.focus();
 }
